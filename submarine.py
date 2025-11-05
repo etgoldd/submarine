@@ -9,8 +9,14 @@ Guesses are of the form \"X,Y\" (without the quotes)
 Good luck!
 
 """
-BAD_FORMAT_TEXT = "Guesses are of the form \"X Y\" where X and Y are the corresponding integer coordinates, try again!"
-ERROR_GUESS = (-1, -1)
+BAD_FORMAT_TEXT = "Guesses are of the form \"X,Y\" where X and Y are the corresponding integer coordinates, try again!"
+BOARD_START = 1
+BOARD_END = 10
+CLOSE_DISTANCE = 1
+
+
+class GuessException(Exception):
+    pass
 
 
 def get_player_guess() -> tuple[int, int]:
@@ -21,15 +27,15 @@ def get_player_guess() -> tuple[int, int]:
     player_input = input("Take your shot!\n")
     player_coords_str = player_input.split(",")
     if len(player_coords_str) != 2:
-        return ERROR_GUESS
+        raise GuessException
     try:
         player_guess = (int(player_coords_str[0]), int(player_coords_str[1]))
     except Exception:
-        return ERROR_GUESS
+        raise GuessException
     x, y = player_guess[0], player_guess[1]
-    if 1 <= x <= 10 and 1 <= y <= 10:
+    if BOARD_START <= x <= BOARD_END and BOARD_START <= y <= BOARD_END:
         return player_guess
-    return ERROR_GUESS
+    raise GuessException
 
 
 def get_abs_diff(coords1: tuple[int, int], coords2: tuple[int, int]) -> tuple[int, int]:
@@ -41,10 +47,10 @@ def get_abs_diff(coords1: tuple[int, int], coords2: tuple[int, int]) -> tuple[in
 
 def is_close(coords1: tuple[int, int], coords2: tuple[int, int]) -> bool:
     """
-    Returns True if the two vectors are within 1 square (including diagonally) of each other
+    Returns True if the two vectors are within <CLOSE_DISTANCE> squares (including diagonally) of each other
     """
     diff_x, diff_y = get_abs_diff(coords1, coords2)
-    return diff_x <= 1 and diff_y <= 1
+    return diff_x <= CLOSE_DISTANCE and diff_y <= CLOSE_DISTANCE
 
 
 def is_aligned(coords1: tuple[int, int], coords2: tuple[int, int]) -> bool:
@@ -57,12 +63,12 @@ def is_aligned(coords1: tuple[int, int], coords2: tuple[int, int]) -> bool:
 
 def main() -> None:
     guesses = 1
-    sub_loc = (randint(1, 10), randint(1, 10))
+    sub_loc = (randint(BOARD_START, BOARD_END), randint(BOARD_START, BOARD_END))
     print(INTRO_TEXT)
-    print(sub_loc)
     while True:
-        guess = get_player_guess()
-        if guess == ERROR_GUESS:
+        try:
+            guess = get_player_guess()
+        except GuessException:
             print(BAD_FORMAT_TEXT)
             continue
         if guess == sub_loc:
